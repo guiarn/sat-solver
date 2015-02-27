@@ -13,10 +13,16 @@ uint numVars;
 uint numClauses;
 vector<vector<int> > clauses;
 vector<int> model;
-vector<pair<vector<int>,vector<int> > > litAppearsIn;
+vector<vector<int> > litAppearsIn;
 vector<int> modelStack;
 uint indexOfNextLitToPropagate;
 uint decisionLevel;
+int numDecisions;
+
+
+inline int refLit (int lit) {
+	return lit + (lit < 0 ? numVars : 0);
+}
 
 void readClauses( ){
     // Skip comments
@@ -29,18 +35,16 @@ void readClauses( ){
     string aux;
     cin >> aux >> numVars >> numClauses;
     clauses.resize(numClauses);
-	litAppearsIn.resize(numVars+1);
+	litAppearsIn.resize((numVars+1)*2);
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
         while (cin >> lit and lit != 0) {
-			if (lit > 0) litAppearsIn[lit].first.push_back(i);
-			else litAppearsIn[abs(lit)].second.push_back(i);
+			litAppearsIn[refLit(lit)].push_back(i);
 			clauses[i].push_back(lit);
 		}
     }    
 }
-
 
 
 int currentValueInModel(int lit){
@@ -64,9 +68,10 @@ void setLiteralToTrue(int lit){
 //idea -> aux structure that only has active clauses
 bool propagateGivesConflict () {
 	while ( indexOfNextLitToPropagate < modelStack.size() ) {
-		int literalToProgapate = modelStack[indexOfNextLitToPropagate];
+		int litToPropagate = modelStack[indexOfNextLitToPropagate];
+		int negatedLitToProp = -litToPropagate;
 		++indexOfNextLitToPropagate;
-		for (int clauseToCheck : litAppearsIn[literalToProgapate].second) {
+		for (int clauseToCheck : litAppearsIn[refLit(negatedLitToProp)]) {
 			bool someLitTrue = false;
 			int numUndefs = 0;
 			int lastLitUndef = 0;
@@ -100,6 +105,7 @@ void backtrack(){
     --decisionLevel;
     indexOfNextLitToPropagate = modelStack.size();
     setLiteralToTrue(-lit);  // reverse last decision
+	++numDecisions;
 }
 
 
@@ -125,11 +131,12 @@ void checkmodel(){
 }
 
 int printResults (bool b, clock_t s) {
+	clock_t end = clock();
 	cout.setf(ios::fixed);
-	cout.precision(1);
+	cout.precision(6);
 	if (b) cout << "s SATISFIABLE" << endl;
 	else cout << "s UNSATISFIABLE" << endl;
-	clock_t end = clock();
+	cout << "c " << numDecisions << " decisions" << endl;
 	double elapsed = double(end - s) / CLOCKS_PER_SEC;
 	cout << "c " << elapsed << " seconds total run time" << endl;
 	return (b ? 20:10);
@@ -140,16 +147,18 @@ int main(){
     model.resize(numVars+1,UNDEF);
     indexOfNextLitToPropagate = 0;  
     decisionLevel = 0;
+	numDecisions = 0;
 	clock_t begin = clock();
 	
     // Take care of initial unit clauses, if any
-    for (uint i = 0; i < numClauses; ++i)
+    for (uint i = 0; i < numClauses; ++i){
         if (clauses[i].size() == 1) {
             int lit = clauses[i][0];
             int val = currentValueInModel(lit);
             if (val == FALSE) return printResults(false,begin);
             else if (val == UNDEF) setLiteralToTrue(lit);
         }
+	}
 
     // DPLL algorithm
     while (true) {
@@ -167,5 +176,6 @@ int main(){
         ++indexOfNextLitToPropagate;
         ++decisionLevel;
         setLiteralToTrue(decisionLit);    // now push decisionLit on top of the mark
+		++numDecisions;
     }
 }  
