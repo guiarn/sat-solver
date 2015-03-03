@@ -21,7 +21,7 @@ int numDecisions;
 
 
 inline int refLit (int lit) {
-	return lit + (lit < 0 ? numVars : 0);
+    return lit + (lit < 0 ? numVars : 0);
 }
 
 void readClauses( ){
@@ -35,14 +35,14 @@ void readClauses( ){
     string aux;
     cin >> aux >> numVars >> numClauses;
     clauses.resize(numClauses);
-	litAppearsIn.resize((numVars+1)*2);
+    litAppearsIn.resize((numVars+1)*2);
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
         while (cin >> lit and lit != 0) {
-			litAppearsIn[refLit(lit)].push_back(i);
-			clauses[i].push_back(lit);
-		}
+            litAppearsIn[refLit(lit)].push_back(i);
+            clauses[i].push_back(lit);
+        }
     }    
 }
 
@@ -59,33 +59,30 @@ int currentValueInModel(int lit){
 void setLiteralToTrue(int lit){
     modelStack.push_back(lit);
     if (lit > 0) model[lit] = TRUE;
-    else model[-lit] = FALSE;		
+    else model[-lit] = FALSE;       
 }
 
-//while there is variables to propagate
-//checks all clauses, if all literals from clause are false -> keep backtracking
-//if only one literal undef in clause and the other literals are false, set it to true and continue
-//idea -> aux structure that only has active clauses
+
 bool propagateGivesConflict () {
-	while ( indexOfNextLitToPropagate < modelStack.size() ) {
-		int litToPropagate = modelStack[indexOfNextLitToPropagate];
-		int negatedLitToProp = -litToPropagate;
-		++indexOfNextLitToPropagate;
-		for (int clauseToCheck : litAppearsIn[refLit(negatedLitToProp)]) {
-			bool someLitTrue = false;
-			int numUndefs = 0;
-			int lastLitUndef = 0;
-			for (uint k = 0; not someLitTrue and k < clauses[clauseToCheck].size(); ++k) {
-				int val = currentValueInModel(clauses[clauseToCheck][k]);
-				if (val == TRUE) someLitTrue = true;
-				else if (val == UNDEF) {
-					++numUndefs;
-					lastLitUndef = clauses[clauseToCheck][k];
-				}
-			}
-			if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);
-			else if (not someLitTrue and numUndefs == 0) return true;
-		}
+    while ( indexOfNextLitToPropagate < modelStack.size() ) {
+        int litToPropagate = modelStack[indexOfNextLitToPropagate];
+        int negatedLitToProp = -litToPropagate;
+        ++indexOfNextLitToPropagate;
+        for (int clauseToCheck : litAppearsIn[refLit(negatedLitToProp)]) {
+            bool someLitTrue = false;
+            int numUndefs = 0;
+            int lastLitUndef = 0;
+            for (uint k = 0; not someLitTrue and k < clauses[clauseToCheck].size(); ++k) {
+                int val = currentValueInModel(clauses[clauseToCheck][k]);
+                if (val == TRUE) someLitTrue = true;
+                else if (val == UNDEF) {
+                    ++numUndefs;
+                    lastLitUndef = clauses[clauseToCheck][k];
+                }
+            }
+            if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);
+            else if (not someLitTrue and numUndefs == 0) return true;
+        }
     }
     return false;
 }
@@ -105,7 +102,7 @@ void backtrack(){
     --decisionLevel;
     indexOfNextLitToPropagate = modelStack.size();
     setLiteralToTrue(-lit);  // reverse last decision
-	++numDecisions;
+    ++numDecisions;
 }
 
 
@@ -131,15 +128,15 @@ void checkmodel(){
 }
 
 int printResults (bool b, clock_t s) {
-	clock_t end = clock();
-	cout.setf(ios::fixed);
-	cout.precision(6);
-	if (b) cout << "s SATISFIABLE" << endl;
-	else cout << "s UNSATISFIABLE" << endl;
-	cout << "c " << numDecisions << " decisions" << endl;
-	double elapsed = double(end - s) / CLOCKS_PER_SEC;
-	cout << "c " << elapsed << " seconds total run time" << endl;
-	return (b ? 20:10);
+    clock_t end = clock();
+    cout.setf(ios::fixed);
+    cout.precision(6);
+    if (b) cout << "s SATISFIABLE" << endl;
+    else cout << "s UNSATISFIABLE" << endl;
+    cout << "c " << numDecisions << " decisions" << endl;
+    double elapsed = double(end - s) / CLOCKS_PER_SEC;
+    cout << "c " << elapsed << " seconds total run time" << endl;
+    return (b ? 20:10);
 }
 
 int main(){ 
@@ -147,9 +144,9 @@ int main(){
     model.resize(numVars+1,UNDEF);
     indexOfNextLitToPropagate = 0;  
     decisionLevel = 0;
-	numDecisions = 0;
-	clock_t begin = clock();
-	
+    numDecisions = 0;
+    clock_t begin = clock();
+    
     // Take care of initial unit clauses, if any
     for (uint i = 0; i < numClauses; ++i){
         if (clauses[i].size() == 1) {
@@ -158,7 +155,7 @@ int main(){
             if (val == FALSE) return printResults(false,begin);
             else if (val == UNDEF) setLiteralToTrue(lit);
         }
-	}
+    }
 
     // DPLL algorithm
     while (true) {
@@ -168,14 +165,14 @@ int main(){
         }
         int decisionLit = getNextDecisionLiteral();
         if (decisionLit == 0) {
-			checkmodel();
-			return printResults(true,begin);
-		}
+            checkmodel();
+            return printResults(true,begin);
+        }
         // start new decision level:
         modelStack.push_back(0);  // push mark indicating new DL
         ++indexOfNextLitToPropagate;
         ++decisionLevel;
         setLiteralToTrue(decisionLit);    // now push decisionLit on top of the mark
-		++numDecisions;
+        ++numDecisions;
     }
 }  
