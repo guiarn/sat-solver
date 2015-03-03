@@ -157,6 +157,17 @@ int main(){
         }
     }
 
+    //Set pure literals to their only possible value
+    for (uint i = 1; i <= numVars; ++i) {
+        int negatedLit = -i;
+        if (litAppearsIn[refLit(i)].size() == 0){
+            setLiteralToTrue(negatedLit);
+        }
+        else if (litAppearsIn[refLit(negatedLit)].size() == 0) {
+            setLiteralToTrue(i);
+        }
+    }
+
     // DPLL algorithm
     while (true) {
         while ( propagateGivesConflict() ) {
