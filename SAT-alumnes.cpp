@@ -15,12 +15,14 @@ vector<vector<int> > clauses;
 vector<int> model;
 vector<vector<int> > litAppearsIn;
 vector<int> modelStack;
+vector<int> VSIDS;
 uint indexOfNextLitToPropagate;
 uint decisionLevel;
 int numDecisions;
+int highestLitVSIDS;
 
 
-inline int refLit (int lit) {
+inline int refLAI (int lit) {
     return lit + (lit < 0 ? numVars : 0);
 }
 
@@ -36,12 +38,19 @@ void readClauses( ){
     cin >> aux >> numVars >> numClauses;
     clauses.resize(numClauses);
     litAppearsIn.resize((numVars+1)*2);
+    VSIDS.resize(numVars+1,0);
+    int mx = 0;
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
         while (cin >> lit and lit != 0) {
-            litAppearsIn[refLit(lit)].push_back(i);
+            litAppearsIn[refLAI(lit)].push_back(i);
             clauses[i].push_back(lit);
+            ++VSIDS[abs(lit)];
+            if (mx < VSIDS[abs(lit)]) {
+                highestLitVSIDS = abs(lit);
+                mx = VSIDS[abs(lit)];
+            }
         }
     }    
 }
@@ -68,7 +77,7 @@ bool propagateGivesConflict () {
         int litToPropagate = modelStack[indexOfNextLitToPropagate];
         int negatedLitToProp = -litToPropagate;
         ++indexOfNextLitToPropagate;
-        for (int clauseToCheck : litAppearsIn[refLit(negatedLitToProp)]) {
+        for (int clauseToCheck : litAppearsIn[refLAI(negatedLitToProp)]) {
             bool someLitTrue = false;
             int numUndefs = 0;
             int lastLitUndef = 0;
@@ -81,7 +90,12 @@ bool propagateGivesConflict () {
                 }
             }
             if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);
-            else if (not someLitTrue and numUndefs == 0) return true;
+            else if (not someLitTrue and numUndefs == 0) {
+                for (uint k = 0; k < clauses[clauseToCheck].size(); ++k) {
+                    VSIDS[abs(clauses[clauseToCheck][k])] += 100;
+                }
+                return true;
+            }
         }
     }
     return false;
@@ -105,12 +119,20 @@ void backtrack(){
     ++numDecisions;
 }
 
+inline void decayScores () {
+    for (int& x : VSIDS) x /= 2;
+}
 
 // Heuristic for finding the next decision literal:
 int getNextDecisionLiteral(){
-    for (uint i = 1; i <= numVars; ++i) // stupid heuristic:
-        if (model[i] == UNDEF) return i;  // returns first UNDEF var, positively
-    return 0; // reurns 0 when all literals are defined
+    int mx = 0, lit = 0;
+    for (uint i = 1; i <= numVars; ++i) {
+        if (model[i] == UNDEF and VSIDS[i] > mx) {
+            mx = VSIDS[i];
+            lit = i;
+        }
+    }
+    return lit; // reurns 0 when all literals are defined
 }
 
 void checkmodel(){
@@ -145,6 +167,7 @@ int main(){
     indexOfNextLitToPropagate = 0;  
     decisionLevel = 0;
     numDecisions = 0;
+    highestLitVSIDS = 0;
     clock_t begin = clock();
     
     // Take care of initial unit clauses, if any
@@ -160,10 +183,10 @@ int main(){
     //Set pure literals to their only possible value
     for (uint i = 1; i <= numVars; ++i) {
         int negatedLit = -i;
-        if (litAppearsIn[refLit(i)].size() == 0){
+        if (litAppearsIn[refLAI(i)].size() == 0){
             setLiteralToTrue(negatedLit);
         }
-        else if (litAppearsIn[refLit(negatedLit)].size() == 0) {
+        else if (litAppearsIn[refLAI(negatedLit)].size() == 0) {
             setLiteralToTrue(i);
         }
     }
@@ -175,6 +198,7 @@ int main(){
             backtrack();
         }
         int decisionLit = getNextDecisionLiteral();
+        decayScores(); 
         if (decisionLit == 0) {
             checkmodel();
             return printResults(true,begin);
