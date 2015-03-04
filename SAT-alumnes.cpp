@@ -110,7 +110,6 @@ void backtrack(){
     --decisionLevel;
     indexOfNextLitToPropagate = modelStack.size();
     setLiteralToTrue(-lit);  // reverse last decision
-    ++numDecisions;
 }
 
 inline void decayScores () {
