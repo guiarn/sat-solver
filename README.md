@@ -1,2 +1,2 @@
 # sat-solver
-Simple SAT solver in C++. 2015. 
+Simple Random 3-SAT solver in C++. 2015. 

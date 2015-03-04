@@ -12,8 +12,8 @@ using namespace std;
 uint numVars;
 uint numClauses;
 vector<vector<int> > clauses;
-vector<int> model;
 vector<vector<int> > litAppearsIn;
+vector<int> model;
 vector<int> modelStack;
 vector<int> VSIDS;
 uint indexOfNextLitToPropagate;
@@ -39,7 +39,6 @@ void readClauses( ){
     clauses.resize(numClauses);
     litAppearsIn.resize((numVars+1)*2);
     VSIDS.resize(numVars+1,0);
-    int mx = 0;
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
@@ -47,9 +46,8 @@ void readClauses( ){
             litAppearsIn[refLAI(lit)].push_back(i);
             clauses[i].push_back(lit);
             ++VSIDS[abs(lit)];
-            if (mx < VSIDS[abs(lit)]) {
+            if (VSIDS[highestLitVSIDS] < VSIDS[abs(lit)]) {
                 highestLitVSIDS = abs(lit);
-                mx = VSIDS[abs(lit)];
             }
         }
     }    
@@ -162,12 +160,12 @@ int printResults (bool b, clock_t s) {
 }
 
 int main(){ 
+    highestLitVSIDS = 0;
     readClauses(); // reads numVars, numClauses and clauses
     model.resize(numVars+1,UNDEF);
     indexOfNextLitToPropagate = 0;  
     decisionLevel = 0;
     numDecisions = 0;
-    highestLitVSIDS = 0;
     clock_t begin = clock();
     
     // Take care of initial unit clauses, if any
