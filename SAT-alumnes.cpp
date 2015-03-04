@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <vector>
 #include <ctime>
-#include <unordered_set>
 using namespace std;
 
 #define UNDEF -1
@@ -17,10 +16,10 @@ vector<vector<int> > litAppearsIn;
 vector<int> model;
 vector<int> modelStack;
 vector<int> VSIDS;
-unordered_set<int> undefLits;
 uint indexOfNextLitToPropagate;
 uint decisionLevel;
 int numDecisions;
+int highestLitVSIDS;
 
 
 inline int refLAI (int lit) {
@@ -46,8 +45,10 @@ void readClauses( ){
         while (cin >> lit and lit != 0) {
             litAppearsIn[refLAI(lit)].push_back(i);
             clauses[i].push_back(lit);
-            undefLits.insert(abs(lit));
             ++VSIDS[abs(lit)];
+            if (VSIDS[highestLitVSIDS] < VSIDS[abs(lit)]) {
+                highestLitVSIDS = abs(lit);
+            }
         }
     }    
 }
@@ -64,7 +65,6 @@ int currentValueInModel(int lit){
 
 void setLiteralToTrue(int lit){
     modelStack.push_back(lit);
-    undefLits.erase(abs(lit));
     if (lit > 0) model[lit] = TRUE;
     else model[-lit] = FALSE;       
 }
@@ -106,7 +106,6 @@ void backtrack(){
     while (modelStack[i] != 0){ // 0 is the DL mark
         lit = modelStack[i];
         model[abs(lit)] = UNDEF;
-        undefLits.insert(abs(lit));
         modelStack.pop_back();
         --i;
     }
@@ -125,10 +124,10 @@ inline void decayScores () {
 // Heuristic for finding the next decision literal:
 int getNextDecisionLiteral(){
     int mx = -1, lit = 0;
-    for (int l : undefLits) {
-        if (VSIDS[l] > mx) {
-            mx = VSIDS[l];
-            lit = l;
+    for (uint i = 1; i <= numVars; ++i) {
+        if (model[i] == UNDEF and VSIDS[i] > mx) {
+            mx = VSIDS[i];
+            lit = i;
         }
     }
     return lit; // reurns 0 when all literals are defined
@@ -161,6 +160,7 @@ int printResults (bool b, clock_t s) {
 }
 
 int main(){ 
+    highestLitVSIDS = 0;
     readClauses(); // reads numVars, numClauses and clauses
     model.resize(numVars+1,UNDEF);
     indexOfNextLitToPropagate = 0;  
