@@ -19,7 +19,6 @@ vector<int> VSIDS;
 uint indexOfNextLitToPropagate;
 uint decisionLevel;
 int numDecisions;
-int highestLitVSIDS;
 
 
 inline int refLAI (int lit) {
@@ -46,9 +45,6 @@ void readClauses( ){
             litAppearsIn[refLAI(lit)].push_back(i);
             clauses[i].push_back(lit);
             ++VSIDS[abs(lit)];
-            if (VSIDS[highestLitVSIDS] < VSIDS[abs(lit)]) {
-                highestLitVSIDS = abs(lit);
-            }
         }
     }    
 }
@@ -160,7 +156,6 @@ int printResults (bool b, clock_t s) {
 }
 
 int main(){ 
-    highestLitVSIDS = 0;
     readClauses(); // reads numVars, numClauses and clauses
     model.resize(numVars+1,UNDEF);
     indexOfNextLitToPropagate = 0;  
