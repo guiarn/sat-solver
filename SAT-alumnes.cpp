@@ -21,7 +21,7 @@ uint decisionLevel;
 int numDecisions;
 
 
-inline int refLit (int lit) {
+inline int refLAI (int lit) {
     return lit + (lit < 0 ? numVars : 0);
 }
 
@@ -37,14 +37,14 @@ void readClauses( ){
     cin >> aux >> numVars >> numClauses;
     clauses.resize(numClauses);
     litAppearsIn.resize((numVars+1)*2);
-    VSIDS.resize((numVars+1)*2,0);
+    VSIDS.resize(numVars+1,0);
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
         while (cin >> lit and lit != 0) {
-            litAppearsIn[refLit(lit)].push_back(i);
+            litAppearsIn[refLAI(lit)].push_back(i);
             clauses[i].push_back(lit);
-            ++VSIDS[refLit(lit)];
+            ++VSIDS[abs(lit)];
         }
     }    
 }
@@ -71,7 +71,7 @@ bool propagateGivesConflict () {
         int litToPropagate = modelStack[indexOfNextLitToPropagate];
         int negatedLitToProp = -litToPropagate;
         ++indexOfNextLitToPropagate;
-        for (int clauseToCheck : litAppearsIn[refLit(negatedLitToProp)]) {
+        for (int clauseToCheck : litAppearsIn[refLAI(negatedLitToProp)]) {
             bool someLitTrue = false;
             int numUndefs = 0;
             int lastLitUndef = 0;
@@ -86,7 +86,7 @@ bool propagateGivesConflict () {
             if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < clauses[clauseToCheck].size(); ++k) {
-                    VSIDS[refLit(clauses[clauseToCheck][k])] += 100;
+                    VSIDS[abs(clauses[clauseToCheck][k])] += 100;
                 }
                 return true;
             }
@@ -110,6 +110,7 @@ void backtrack(){
     --decisionLevel;
     indexOfNextLitToPropagate = modelStack.size();
     setLiteralToTrue(-lit);  // reverse last decision
+    ++numDecisions;
 }
 
 inline void decayScores () {
@@ -120,16 +121,9 @@ inline void decayScores () {
 int getNextDecisionLiteral(){
     int mx = -1, lit = 0;
     for (uint i = 1; i <= numVars; ++i) {
-        if (currentValueInModel(i) == UNDEF and VSIDS[i] > mx) {
+        if (model[i] == UNDEF and VSIDS[i] > mx) {
             mx = VSIDS[i];
             lit = i;
-        }
-    }
-    for (uint i = numVars+1; i <= numVars*2+1; ++i){
-        int l = (i % numVars) * (-1);
-        if (currentValueInModel(l) == UNDEF and VSIDS[i] > mx) {
-            mx = VSIDS[i];
-            lit = l;
         }
     }
     return lit; // reurns 0 when all literals are defined
@@ -182,10 +176,10 @@ int main(){
     //Set pure literals to their only possible value
     for (uint i = 1; i <= numVars; ++i) {
         int negatedLit = -i;
-        if (litAppearsIn[refLit(i)].size() == 0){
+        if (litAppearsIn[refLAI(i)].size() == 0){
             setLiteralToTrue(negatedLit);
         }
-        else if (litAppearsIn[refLit(negatedLit)].size() == 0) {
+        else if (litAppearsIn[refLAI(negatedLit)].size() == 0) {
             setLiteralToTrue(i);
         }
     }
