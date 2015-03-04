@@ -125,7 +125,7 @@ inline void decayScores () {
 
 // Heuristic for finding the next decision literal:
 int getNextDecisionLiteral(){
-    int mx = 0, lit = 0;
+    int mx = -1, lit = 0;
     for (uint i = 1; i <= numVars; ++i) {
         if (model[i] == UNDEF and VSIDS[i] > mx) {
             mx = VSIDS[i];
