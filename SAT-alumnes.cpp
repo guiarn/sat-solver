@@ -23,7 +23,7 @@ int numDecisions;
 int highestUndefLit;
 
 
-inline int refLit (int lit) {
+inline int refLAI (int lit) {
     return lit + (lit < 0 ? numVars : 0);
 }
 
@@ -45,7 +45,7 @@ void readClauses( ){
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
         while (cin >> lit and lit != 0) {
-            litAppearsIn[refLit(lit)].push_back(i);
+            litAppearsIn[refLAI(lit)].push_back(i);
             clauses[i].push_back(lit);
             ++VSIDS[abs(lit)];
             if (VSIDS[highestUndefLit] < VSIDS[abs(lit)]){
@@ -78,19 +78,19 @@ bool propagateGivesConflict () {
         int litToPropagate = modelStack[indexOfNextLitToPropagate];
         int negatedLitToProp = -litToPropagate;
         ++indexOfNextLitToPropagate;
-        for (int clauseToCheck : litAppearsIn[refLit(negatedLitToProp)]) {
+        for (int clauseToCheck : litAppearsIn[refLAI(negatedLitToProp)]) {
             bool someLitTrue = false;
             int numUndefs = 0;
-            int litUndef = 0;
+            int lastLitUndef = 0;
             for (uint k = 0; not someLitTrue and k < clauses[clauseToCheck].size(); ++k) {
                 int val = currentValueInModel(clauses[clauseToCheck][k]);
                 if (val == TRUE) someLitTrue = true;
                 else if (val == UNDEF) {
                     ++numUndefs;
-                    litUndef = clauses[clauseToCheck][k];
+                    lastLitUndef = clauses[clauseToCheck][k];
                 }
             }
-            if (not someLitTrue and numUndefs == 1) setLiteralToTrue(litUndef);
+            if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < clauses[clauseToCheck].size(); ++k) {
                     int lit = abs(clauses[clauseToCheck][k]);
@@ -125,7 +125,7 @@ void backtrack(){
 }
 
 inline void decayScores () {
-    for (int& x : VSIDS) x >>= 1;
+    for (int& x : VSIDS) x /= 2;
 }
 
 // Heuristic for finding the next decision literal:
