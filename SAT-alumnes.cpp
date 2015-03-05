@@ -8,6 +8,7 @@ using namespace std;
 #define UNDEF -1
 #define TRUE 1
 #define FALSE 0
+#define NTIMES 15
 
 uint numVars;
 uint numClauses;
@@ -19,6 +20,7 @@ vector<int> VSIDS;
 uint indexOfNextLitToPropagate;
 uint decisionLevel;
 int numDecisions;
+int timeToDecay;
 
 
 inline int refLit (int lit) {
@@ -86,7 +88,7 @@ bool propagateGivesConflict () {
             if (not someLitTrue and numUndefs == 1) setLiteralToTrue(litUndef);
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < clauses[clauseToCheck].size(); ++k) {
-                    VSIDS[abs(clauses[clauseToCheck][k])] += 100;
+                    VSIDS[abs(clauses[clauseToCheck][k])] += 50;
                 }
                 return true;
             }
@@ -110,6 +112,7 @@ void backtrack(){
     --decisionLevel;
     indexOfNextLitToPropagate = modelStack.size();
     setLiteralToTrue(-lit);  // reverse last decision
+    if (timeToDecay > 0) --timeToDecay;
 }
 
 inline void decayScores () {
@@ -160,6 +163,7 @@ int main(){
     indexOfNextLitToPropagate = 0;  
     decisionLevel = 0;
     numDecisions = 0;
+    timeToDecay = NTIMES;
     clock_t begin = clock();
     
     // Take care of initial unit clauses, if any
@@ -179,7 +183,10 @@ int main(){
             backtrack();
         }
         int decisionLit = getNextDecisionLiteral();
-        decayScores(); 
+        if (timeToDecay <= 0) {
+            decayScores(); 
+            timeToDecay = NTIMES;
+        }
         if (decisionLit == 0) {
             checkmodel();
             return printResults(true,begin);
