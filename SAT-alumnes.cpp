@@ -21,7 +21,7 @@ uint decisionLevel;
 int numDecisions;
 
 
-inline int refLAI (int lit) {
+inline int refLit (int lit) {
     return lit + (lit < 0 ? numVars : 0);
 }
 
@@ -42,7 +42,7 @@ void readClauses( ){
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
         while (cin >> lit and lit != 0) {
-            litAppearsIn[refLAI(lit)].push_back(i);
+            litAppearsIn[refLit(lit)].push_back(i);
             clauses[i].push_back(lit);
             ++VSIDS[abs(lit)];
         }
@@ -71,19 +71,19 @@ bool propagateGivesConflict () {
         int litToPropagate = modelStack[indexOfNextLitToPropagate];
         int negatedLitToProp = -litToPropagate;
         ++indexOfNextLitToPropagate;
-        for (int clauseToCheck : litAppearsIn[refLAI(negatedLitToProp)]) {
+        for (int clauseToCheck : litAppearsIn[refLit(negatedLitToProp)]) {
             bool someLitTrue = false;
             int numUndefs = 0;
-            int lastLitUndef = 0;
+            int litUndef = 0;
             for (uint k = 0; not someLitTrue and k < clauses[clauseToCheck].size(); ++k) {
                 int val = currentValueInModel(clauses[clauseToCheck][k]);
                 if (val == TRUE) someLitTrue = true;
                 else if (val == UNDEF) {
                     ++numUndefs;
-                    lastLitUndef = clauses[clauseToCheck][k];
+                    litUndef = clauses[clauseToCheck][k];
                 }
             }
-            if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);
+            if (not someLitTrue and numUndefs == 1) setLiteralToTrue(litUndef);
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < clauses[clauseToCheck].size(); ++k) {
                     VSIDS[abs(clauses[clauseToCheck][k])] += 100;
@@ -113,7 +113,7 @@ void backtrack(){
 }
 
 inline void decayScores () {
-    for (int& x : VSIDS) x /= 2;
+    for (int& x : VSIDS) x >>= 1;
 }
 
 // Heuristic for finding the next decision literal:
