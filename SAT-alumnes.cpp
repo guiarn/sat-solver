@@ -16,11 +16,9 @@ vector<vector<int> > litAppearsIn;
 vector<int> model;
 vector<int> modelStack;
 vector<int> VSIDS;
-vector<bool> isLitUndef;
 uint indexOfNextLitToPropagate;
 uint decisionLevel;
 int numDecisions;
-int highestUndefLit;
 
 
 inline int refLit (int lit) {
@@ -40,7 +38,6 @@ void readClauses( ){
     clauses.resize(numClauses);
     litAppearsIn.resize((numVars+1)*2);
     VSIDS.resize(numVars+1,0);
-    isLitUndef.resize(numVars+1,true);
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
@@ -48,9 +45,6 @@ void readClauses( ){
             litAppearsIn[refLit(lit)].push_back(i);
             clauses[i].push_back(lit);
             ++VSIDS[abs(lit)];
-            if (VSIDS[highestUndefLit] < VSIDS[abs(lit)]){
-                highestUndefLit = abs(lit);
-            }
         }
     }    
 }
@@ -67,7 +61,6 @@ int currentValueInModel(int lit){
 
 void setLiteralToTrue(int lit){
     modelStack.push_back(lit);
-    isLitUndef[abs(lit)] = false;
     if (lit > 0) model[lit] = TRUE;
     else model[-lit] = FALSE;       
 }
@@ -93,11 +86,7 @@ bool propagateGivesConflict () {
             if (not someLitTrue and numUndefs == 1) setLiteralToTrue(litUndef);
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < clauses[clauseToCheck].size(); ++k) {
-                    int lit = abs(clauses[clauseToCheck][k]);
-                    VSIDS[lit] += 100;
-                    if (isLitUndef[lit] and VSIDS[highestUndefLit] < VSIDS[lit]) {
-                        highestUndefLit = lit;
-                    }
+                    VSIDS[abs(clauses[clauseToCheck][k])] += 100;
                 }
                 return true;
             }
@@ -113,7 +102,6 @@ void backtrack(){
     while (modelStack[i] != 0){ // 0 is the DL mark
         lit = modelStack[i];
         model[abs(lit)] = UNDEF;
-        isLitUndef[abs(lit)] = true;
         modelStack.pop_back();
         --i;
     }
@@ -167,7 +155,6 @@ int printResults (bool b, clock_t s) {
 }
 
 int main(){ 
-    highestUndefLit = 0;
     readClauses(); // reads numVars, numClauses and clauses
     model.resize(numVars+1,UNDEF);
     indexOfNextLitToPropagate = 0;  
