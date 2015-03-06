@@ -8,7 +8,7 @@ using namespace std;
 #define UNDEF -1
 #define TRUE 1
 #define FALSE 0
-#define NTIMES 200
+#define NBTSTODECAY 1300
 
 uint numVars;
 uint numClauses;
@@ -46,7 +46,7 @@ void readClauses( ){
         while (cin >> lit and lit != 0) {
             litAppearsIn[refLit(lit)].push_back(i);
             clauses[i].push_back(lit);
-            ++VSIDS[abs(lit)];
+            VSIDS[abs(lit)] += 10;
         }
     }    
 }
@@ -73,7 +73,7 @@ bool propagateGivesConflict () {
         int litToPropagate = modelStack[indexOfNextLitToPropagate];
         ++indexOfNextLitToPropagate;
         int r = refLit(-litToPropagate);
-        for (const int& clauseToCheck : litAppearsIn[r]) {
+        for (const int clauseToCheck : litAppearsIn[r]) {
             bool someLitTrue = false;
             int numUndefs = 0;
             int litUndef = 0;
@@ -90,7 +90,7 @@ bool propagateGivesConflict () {
             if (not someLitTrue and numUndefs == 1) setLiteralToTrue(litUndef);
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < sizeClause; ++k) {
-                    VSIDS[abs(clauses[clauseToCheck][k])] += 50;
+                    VSIDS[abs(clauses[clauseToCheck][k])] += 100;
                 }
                 return true;
             }
@@ -114,7 +114,7 @@ void backtrack(){
     --decisionLevel;
     indexOfNextLitToPropagate = modelStack.size();
     setLiteralToTrue(-lit);  // reverse last decision
-    if (timeToDecay > 0) --timeToDecay;
+    --timeToDecay;
 }
 
 inline void decayScores () {
@@ -165,7 +165,7 @@ int main(){
     indexOfNextLitToPropagate = 0;  
     decisionLevel = 0;
     numDecisions = 0;
-    timeToDecay = NTIMES;
+    timeToDecay = NBTSTODECAY;
     clock_t begin = clock();
     
     // Take care of initial unit clauses, if any
@@ -183,12 +183,12 @@ int main(){
         while ( propagateGivesConflict() ) {
             if (decisionLevel == 0) return printResults(false,begin);
             backtrack();
+		    if (timeToDecay <= 0) {
+				decayScores(); 
+				timeToDecay = NBTSTODECAY;
+			}
         }
         int decisionLit = getNextDecisionLiteral();
-        if (timeToDecay <= 0) {
-            decayScores(); 
-            timeToDecay = NTIMES;
-        }
         if (decisionLit == 0) {
             checkmodel();
             return printResults(true,begin);
