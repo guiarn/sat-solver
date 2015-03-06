@@ -8,7 +8,7 @@ using namespace std;
 #define UNDEF -1
 #define TRUE 1
 #define FALSE 0
-#define NTIMES 15
+#define NTIMES 200
 
 uint numVars;
 uint numClauses;
@@ -71,23 +71,25 @@ void setLiteralToTrue(int lit){
 bool propagateGivesConflict () {
     while ( indexOfNextLitToPropagate < modelStack.size() ) {
         int litToPropagate = modelStack[indexOfNextLitToPropagate];
-        int negatedLitToProp = -litToPropagate;
         ++indexOfNextLitToPropagate;
-        for (int clauseToCheck : litAppearsIn[refLit(negatedLitToProp)]) {
+        int r = refLit(-litToPropagate);
+        for (const int& clauseToCheck : litAppearsIn[r]) {
             bool someLitTrue = false;
             int numUndefs = 0;
             int litUndef = 0;
-            for (uint k = 0; not someLitTrue and k < clauses[clauseToCheck].size(); ++k) {
-                int val = currentValueInModel(clauses[clauseToCheck][k]);
+            uint sizeClause = clauses[clauseToCheck].size();
+            for (uint k = 0; not someLitTrue and k < sizeClause; ++k) {
+                int lit = clauses[clauseToCheck][k];
+                int val = currentValueInModel(lit);
                 if (val == TRUE) someLitTrue = true;
                 else if (val == UNDEF) {
                     ++numUndefs;
-                    litUndef = clauses[clauseToCheck][k];
+                    litUndef = lit;
                 }
             }
             if (not someLitTrue and numUndefs == 1) setLiteralToTrue(litUndef);
             else if (not someLitTrue and numUndefs == 0) {
-                for (uint k = 0; k < clauses[clauseToCheck].size(); ++k) {
+                for (uint k = 0; k < sizeClause; ++k) {
                     VSIDS[abs(clauses[clauseToCheck][k])] += 50;
                 }
                 return true;
