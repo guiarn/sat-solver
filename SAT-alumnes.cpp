@@ -89,9 +89,7 @@ bool propagateGivesConflict () {
             }
             if (not someLitTrue and numUndefs == 1) setLiteralToTrue(litUndef);
             else if (not someLitTrue and numUndefs == 0) {
-                for (uint k = 0; k < sizeClause; ++k) {
-                    VSIDS[abs(clauses[clauseToCheck][k])] += 100;
-                }
+				VSIDS[abs(litToPropagate)] += 100;
                 return true;
             }
         }
