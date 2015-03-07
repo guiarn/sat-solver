@@ -93,9 +93,7 @@ bool propagateGivesConflict () {
             }
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < sizeClause; ++k) {
-                    if (clauses[clauseToCheck][k] == -litToPropagate)
-                        VSIDS[abs(clauses[clauseToCheck][k])] += 4;
-                    else VSIDS[abs(clauses[clauseToCheck][k])] += 2;
+                    VSIDS[abs(clauses[clauseToCheck][k])] += 2;
                 }
                 return true;
             }
