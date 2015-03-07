@@ -19,8 +19,9 @@ vector<int> modelStack;
 vector<int> VSIDS;
 uint indexOfNextLitToPropagate;
 uint decisionLevel;
-int numDecisions;
-int timeToDecay;
+uint numDecisions;
+uint timeToDecay;
+uint propagations;
 
 
 inline int refLit (int lit) {
@@ -86,7 +87,10 @@ bool propagateGivesConflict () {
                     litUndef = clauses[clauseToCheck][k];
                 }
             }
-            if (not someLitTrue and numUndefs == 1) setLiteralToTrue(litUndef);
+            if (not someLitTrue and numUndefs == 1) {
+                setLiteralToTrue(litUndef);
+                ++propagations;
+            }
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < sizeClause; ++k) {
                     VSIDS[abs(clauses[clauseToCheck][k])] += 100;
@@ -150,12 +154,13 @@ void checkmodel(){
 int printResults (bool b, clock_t s) {
     clock_t end = clock();
     cout.setf(ios::fixed);
-    cout.precision(6);
+    cout.precision(4);
     if (b) cout << "s SATISFIABLE" << endl;
     else cout << "s UNSATISFIABLE" << endl;
     cout << "c " << numDecisions << " decisions" << endl;
     double elapsed = double(end - s) / CLOCKS_PER_SEC;
     cout << "c " << elapsed << " seconds total run time" << endl;
+    cout << "c " << (propagations/1e6) / elapsed << " megaprops per second" << endl;
     return (b ? 20:10);
 }
 
@@ -165,6 +170,7 @@ int main(){
     indexOfNextLitToPropagate = 0;  
     decisionLevel = 0;
     numDecisions = 0;
+    propagations = 0;
     timeToDecay = NBTSTODECAY;
     clock_t begin = clock();
     
@@ -183,7 +189,7 @@ int main(){
         while ( propagateGivesConflict() ) {
             if (decisionLevel == 0) return printResults(false,begin);
             backtrack();
-            if (timeToDecay <= 0) {
+            if (timeToDecay == 0) {
                 decayScores(); 
                 timeToDecay = NBTSTODECAY;
             }
