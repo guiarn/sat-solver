@@ -47,7 +47,7 @@ void readClauses( ){
         while (cin >> lit and lit != 0) {
             litAppearsIn[refLit(lit)].push_back(i);
             clauses[i].push_back(lit);
-            VSIDS[abs(lit)] += 10;
+            ++VSIDS[abs(lit)];
         }
     }    
 }
@@ -93,7 +93,7 @@ bool propagateGivesConflict () {
             }
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < sizeClause; ++k) {
-                    VSIDS[abs(clauses[clauseToCheck][k])] += 100;
+                    VSIDS[abs(clauses[clauseToCheck][k])] += 2;
                 }
                 return true;
             }
@@ -203,7 +203,7 @@ int main(){
         modelStack.push_back(0);  // push mark indicating new DL
         ++indexOfNextLitToPropagate;
         ++decisionLevel;
-        setLiteralToTrue(decisionLit);    // now push decisionLit on top of the mark
+        setLiteralToTrue(decisionLit); // now push decisionLit on top of the mark
         ++numDecisions;
     }
 }  
