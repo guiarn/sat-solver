@@ -129,6 +129,7 @@ int getNextDecisionLiteral(){
             lit = i;
         }
     }
+    if (litAppearsIn[lit].size() < litAppearsIn[refLit(-lit)].size()) lit = -lit;
     return lit; // reurns 0 when all literals are defined
 }
 
@@ -182,10 +183,10 @@ int main(){
         while ( propagateGivesConflict() ) {
             if (decisionLevel == 0) return printResults(false,begin);
             backtrack();
-		    if (timeToDecay <= 0) {
-				decayScores(); 
-				timeToDecay = NBTSTODECAY;
-			}
+            if (timeToDecay <= 0) {
+                decayScores(); 
+                timeToDecay = NBTSTODECAY;
+            }
         }
         int decisionLit = getNextDecisionLiteral();
         if (decisionLit == 0) {
