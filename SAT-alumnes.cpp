@@ -39,14 +39,14 @@ void readClauses( ){
     cin >> aux >> numVars >> numClauses;
     clauses.resize(numClauses);
     litAppearsIn.resize((numVars+1)*2);
-    VSIDS.resize((numVars+1)*2,0);
+    VSIDS.resize(numVars+1,0);
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
         while (cin >> lit and lit != 0) {
             litAppearsIn[refLit(lit)].push_back(i);
             clauses[i].push_back(lit);
-            VSIDS[refLit(lit)] += 10;
+            VSIDS[abs(lit)] += 10;
         }
     }    
 }
@@ -89,7 +89,7 @@ bool propagateGivesConflict () {
             if (not someLitTrue and numUndefs == 1) setLiteralToTrue(litUndef);
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < sizeClause; ++k) {
-                    VSIDS[refLit(clauses[clauseToCheck][k])] += 100;
+                    VSIDS[abs(clauses[clauseToCheck][k])] += 100;
                 }
                 return true;
             }
@@ -127,13 +127,6 @@ int getNextDecisionLiteral(){
         if (currentValueInModel(i) == UNDEF and VSIDS[i] > mx) {
             mx = VSIDS[i];
             lit = i;
-        }
-    }
-    for (uint i = numVars+2; i <= 2*numVars+1; ++i) {
-        int l = int(i % (numVars+1)) * (-1);
-        if (currentValueInModel(l) == UNDEF and VSIDS[i] > mx) {
-            mx = VSIDS[i];
-            lit = l;
         }
     }
     return lit; // reurns 0 when all literals are defined
