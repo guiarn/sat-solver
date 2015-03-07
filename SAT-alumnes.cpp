@@ -128,7 +128,7 @@ inline void decayScores () {
 int getNextDecisionLiteral(){
     int mx = -1, lit = 0;
     for (uint i = 1; i <= numVars; ++i) {
-        if (currentValueInModel(i) == UNDEF and VSIDS[i] > mx) {
+        if (currentValueInModel(i) == UNDEF and VSIDS[i] >= mx) {
             mx = VSIDS[i];
             lit = i;
         }
