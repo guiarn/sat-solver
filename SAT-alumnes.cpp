@@ -24,7 +24,7 @@ int timeToDecay;
 
 
 inline int refLit (int lit) {
-    return lit + (lit < 0 ? numVars : 0);
+    return (lit < 0 ? -lit+numVars+1 : lit);
 }
 
 void readClauses( ){
@@ -39,14 +39,14 @@ void readClauses( ){
     cin >> aux >> numVars >> numClauses;
     clauses.resize(numClauses);
     litAppearsIn.resize((numVars+1)*2);
-    VSIDS.resize(numVars+1,0);
+    VSIDS.resize((numVars+1)*2,0);
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
         while (cin >> lit and lit != 0) {
             litAppearsIn[refLit(lit)].push_back(i);
             clauses[i].push_back(lit);
-            VSIDS[abs(lit)] += 10;
+            VSIDS[refLit(lit)] += 10;
         }
     }    
 }
@@ -79,18 +79,17 @@ bool propagateGivesConflict () {
             int litUndef = 0;
             uint sizeClause = clauses[clauseToCheck].size();
             for (uint k = 0; not someLitTrue and k < sizeClause; ++k) {
-                int lit = clauses[clauseToCheck][k];
-                int val = currentValueInModel(lit);
+                int val = currentValueInModel(clauses[clauseToCheck][k]);
                 if (val == TRUE) someLitTrue = true;
                 else if (val == UNDEF) {
                     ++numUndefs;
-                    litUndef = lit;
+                    litUndef = clauses[clauseToCheck][k];
                 }
             }
             if (not someLitTrue and numUndefs == 1) setLiteralToTrue(litUndef);
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < sizeClause; ++k) {
-                    VSIDS[abs(clauses[clauseToCheck][k])] += 100;
+                    VSIDS[refLit(clauses[clauseToCheck][k])] += 100;
                 }
                 return true;
             }
@@ -128,6 +127,13 @@ int getNextDecisionLiteral(){
         if (currentValueInModel(i) == UNDEF and VSIDS[i] > mx) {
             mx = VSIDS[i];
             lit = i;
+        }
+    }
+    for (uint i = numVars+2; i <= 2*numVars+1; ++i) {
+        int l = int(i % (numVars+1)) * (-1);
+        if (currentValueInModel(l) == UNDEF and VSIDS[i] > mx) {
+            mx = VSIDS[i];
+            lit = l;
         }
     }
     return lit; // reurns 0 when all literals are defined
