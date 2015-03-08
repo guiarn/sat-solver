@@ -9,6 +9,7 @@ using namespace std;
 #define TRUE 1
 #define FALSE 0
 #define NBTSTODECAY 1300
+#define PCONFLICT 2
 
 uint numVars;
 uint numClauses;
@@ -93,7 +94,7 @@ bool propagateGivesConflict () {
             }
             else if (not someLitTrue and numUndefs == 0) {
                 for (uint k = 0; k < sizeClause; ++k) {
-                    VSIDS[abs(clauses[clauseToCheck][k])] += 2;
+                    VSIDS[abs(clauses[clauseToCheck][k])] += PCONFLICT;
                 }
                 return true;
             }
