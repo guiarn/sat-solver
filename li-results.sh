@@ -30,7 +30,7 @@ write_results() {
 	echo 
 }
 
-for f in $(find . -type f -name '*.cnf'); do
+for f in $(ls tests/*.cnf); do
 	echo "$f"
 	echo "========================"
 	echo 
